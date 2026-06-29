@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Scientific Calculator</title>
+<style>
+body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#111;margin:0}
+.calc{background:#222;padding:20px;border-radius:16px;width:380px}
+#display{width:100%;height:60px;font-size:24px;text-align:right;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+button{height:50px;font-size:18px;border:none;border-radius:8px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="calc">
+<input id="display" readonly>
+<div class="grid">
+<button onclick="clr()">C</button>
+<button onclick="add('(')">(</button>
+<button onclick="add(')')">)</button>
+<button onclick="add('/')">÷</button>
+<button onclick="add('*')">×</button>
+<button onclick="add('Math.sin(')">sin</button>
+<button onclick="add('Math.cos(')">cos</button>
+<button onclick="add('Math.tan(')">tan</button>
+<button onclick="add('Math.log10(')">log</button>
+<button onclick="add('Math.sqrt(')">√</button>
+<button onclick="add('7')">7</button><button onclick="add('8')">8</button><button onclick="add('9')">9</button><button onclick="add('-')">-</button><button onclick="add('**2')">x²</button>
+<button onclick="add('4')">4</button><button onclick="add('5')">5</button><button onclick="add('6')">6</button><button onclick="add('+')">+</button><button onclick="add('%')">%</button>
+<button onclick="add('1')">1</button><button onclick="add('2')">2</button><button onclick="add('3')">3</button><button onclick="calc()">=</button><button onclick="add('.')">.</button>
+<button onclick="add('0')">0</button>
+</div>
+</div>
+<script>
+const d=document.getElementById('display');
+function add(v){d.value+=v}
+function clr(){d.value=''}
+function calc(){try{d.value=eval(d.value)}catch(e){d.value='Error'}}
+</script>
+</body>
+</html>
