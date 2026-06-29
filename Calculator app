@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCI-CALC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f1117;
+    --panel:     #181c26;
+    --panel2:    #1e2333;
+    --border:    #2a3050;
+    --amber:     #f5a623;
+    --amber-dim: #7a4e0a;
+    --amber-glow:#f5a62355;
+    --red:       #e05252;
+    --blue:      #5b9cf6;
+    --green:     #52c07a;
+    --text:      #c8cfe0;
+    --text-dim:  #5a6380;
+  }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 20px;
+  }
+
+  .shell {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px;
+    width: 340px;
+    box-shadow:
+      0 0 0 1px #0006,
+      0 8px 40px #0008,
+      inset 0 1px 0 #ffffff0a;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber-glow);
+  }
+  .mode-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .mode-badge.active { color: var(--green); border-color: var(--green); }
+
+  /* Display */
+  .display-wrap {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px 12px;
+    margin-bottom: 14px;
+    box-shadow: inset 0 2px 8px #00000060;
+    position: relative;
+  }
+  .display-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ffffff06 0%, transparent 40%);
+    pointer-events: none;
+  }
+  .display-hist {
+    font-size: 11px;
+    color: var(--amber-dim);
+    text-align: right;
+    min-height: 16px;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .display-main {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--amber);
+    text-align: right;
+    letter-spacing: 2px;
+    text-shadow: 0 0 16px var(--amber-glow), 0 0 4px var(--amber-glow);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+    margin-top: 4px;
+    min-height: 36px;
+  }
+  .display-main.error { color: var(--red); text-shadow: 0 0 10px #e0525255; font-size: 18px; }
+
+  /* Mode row */
+  .mode-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .mode-btn {
+    flex: 1;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 5px 2px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .mode-btn:hover { color: var(--text); border-color: #3a4570; }
+  .mode-btn.active { color: var(--amber); border-color: var(--amber); background: #1d1a0e; }
+
+  /* Button grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  button {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 10px 4px;
+    cursor: pointer;
+    transition: all 0.08s;
+    line-height: 1;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #ffffff08;
+    opacity: 0;
+    transition: opacity 0.08s;
+  }
+  button:hover::after { opacity: 1; }
+  button:active { transform: scale(0.95); }
+
+  button.sci   { color: var(--blue); font-size: 11px; }
+  button.op    { color: var(--amber); border-color: var(--amber-dim); }
+  button.eq    {
+    color: #0f1117;
+    background: var(--amber);
+    border-color: var(--amber);
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 0 12px var(--amber-glow);
+  }
+  button.eq:hover { background: #ffc04a; }
+  button.clr   { color: var(--red); border-color: #5a2020; }
+  button.num   { font-size: 14px; }
+
+  .sub { font-size: 9px; display: block; color: var(--text-dim); margin-top: 2px; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+  /* Indicator dots */
+  .indicators { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="header">
+    <div class="brand">SCI·CALC</div>
+    <div class="mode-badge active" id="angle-badge">RAD</div>
+  </div>
+
+  <div class="display-wrap">
+    <div class="display-hist" id="hist"></div>
+    <div class="display-main" id="disp">0</div>
+  </div>
+
+  <!-- Mode toggles -->
+  <div class="mode-row">
+    <button class="mode-btn active" onclick="setAngle('rad')">RAD</button>
+    <button class="mode-btn" onclick="setAngle('deg')">DEG</button>
+    <button class="mode-btn" onclick="setAngle('grad')">GRAD</button>
+  </div>
+
+  <!-- Scientific row 1 -->
+  <div class="grid">
+    <button class="sci" onclick="sci('sin')">sin<span class="sub">sin</span></button>
+    <button class="sci" onclick="sci('cos')">cos<span class="sub">cos</span></button>
+    <button class="sci" onclick="sci('tan')">tan<span class="sub">tan</span></button>
+    <button class="sci" onclick="sci('asin')">sin⁻¹<span class="sub">arc</span></button>
+    <button class="sci" onclick="sci('acos')">cos⁻¹<span class="sub">arc</span></button>
+  </div>
+  <!-- Scientific row 2 -->
+  <div class="grid">
+    <button class="sci" onclick="sci('atan')">tan⁻¹<span class="sub">arc</span></button>
+    <button class="sci" onclick="sci('log')">log<span class="sub">base10</span></button>
+    <button class="sci" onclick="sci('ln')">ln<span class="sub">nat</span></button>
+    <button class="sci" onclick="sci('sqrt')">√x<span class="sub">root</span></button>
+    <button class="sci" onclick="sci('sqr')">x²<span class="sub">sq</span></button>
+  </div>
+  <!-- Scientific row 3 -->
+  <div class="grid">
+    <button class="sci" onclick="sci('cube')">x³<span class="sub">cube</span></button>
+    <button class="sci" onclick="sci('cbrt')">∛x<span class="sub">curt</span></button>
+    <button class="sci" onclick="sci('inv')">1/x<span class="sub">inv</span></button>
+    <button class="sci" onclick="sci('exp10')">10ˣ<span class="sub">exp</span></button>
+    <button class="sci" onclick="sci('exp')">eˣ<span class="sub">exp</span></button>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Main keypad -->
+  <div class="grid grid-4">
+    <button class="clr" onclick="ac()">AC</button>
+    <button class="clr" onclick="ce()">CE</button>
+    <button class="op"  onclick="inputOp('%')">mod</button>
+    <button class="op"  onclick="inputOp('/')">÷</button>
+
+    <button class="num" onclick="inputNum('7')">7</button>
+    <button class="num" onclick="inputNum('8')">8</button>
+    <button class="num" onclick="inputNum('9')">9</button>
+    <button class="op"  onclick="inputOp('*')">×</button>
+
+    <button class="num" onclick="inputNum('4')">4</button>
+    <button class="num" onclick="inputNum('5')">5</button>
+    <button class="num" onclick="inputNum('6')">6</button>
+    <button class="op"  onclick="inputOp('-')">−</button>
+
+    <button class="num" onclick="inputNum('1')">1</button>
+    <button class="num" onclick="inputNum('2')">2</button>
+    <button class="num" onclick="inputNum('3')">3</button>
+    <button class="op"  onclick="inputOp('+')">+</button>
+
+    <button class="sci" onclick="inputConst('pi')">π</button>
+    <button class="num" onclick="inputNum('0')">0</button>
+    <button class="num" onclick="inputDot()">.</button>
+    <button class="eq"  onclick="calculate()">=</button>
+  </div>
+
+  <!-- Extra row -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px;">
+    <button class="sci" onclick="inputConst('e')">e</button>
+    <button class="op"  onclick="toggleSign()">±</button>
+    <button class="op"  onclick="inputPow()">yˣ</button>
+  </div>
+
+  <div class="indicators">
+    <div class="dot on" title="Power"></div>
+    <div class="dot" id="mem-dot" title="Memory"></div>
+    <div class="dot" id="err-dot" title="Error"></div>
+  </div>
+</div>
+
+<script>
+  let display = '0';
+  let hist = '';
+  let pendingOp = null;
+  let pendingVal = null;
+  let justCalc = false;
+  let angle = 'rad';
+
+  function toRad(x) {
+    if (angle === 'deg')  return x * Math.PI / 180;
+    if (angle === 'grad') return x * Math.PI / 200;
+    return x;
+  }
+  function fromRad(x) {
+    if (angle === 'deg')  return x * 180 / Math.PI;
+    if (angle === 'grad') return x * 200 / Math.PI;
+    return x;
+  }
+
+  function setAngle(a) {
+    angle = a;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('angle-badge').textContent = a.toUpperCase();
+  }
+
+  function render() {
+    const el = document.getElementById('disp');
+    el.textContent = display;
+    el.className = 'display-main' + (display === 'ERROR' ? ' error' : '');
+    document.getElementById('hist').textContent = hist;
+    document.getElementById('err-dot').className = 'dot' + (display === 'ERROR' ? ' on' : '');
+  }
+
+  function fmtNum(n) {
+    if (!isFinite(n)) return 'ERROR';
+    if (Number.isNaN(n)) return 'ERROR';
+    // Use toPrecision to cap length, then strip trailing zeros
+    let s = parseFloat(n.toPrecision(12)).toString();
+    if (s.length > 15) s = n.toExponential(6);
+    return s;
+  }
+
+  function inputNum(d) {
+    if (display === 'ERROR') { ac(); }
+    if (justCalc) { display = '0'; hist = ''; justCalc = false; }
+    display = display === '0' ? d : (display.length < 15 ? display + d : display);
+    render();
+  }
+
+  function inputDot() {
+    if (justCalc) { display = '0'; hist = ''; justCalc = false; }
+    if (!display.includes('.')) display += '.';
+    render();
+  }
+
+  function inputOp(op) {
+    if (display === 'ERROR') return;
+    if (pendingOp && !justCalc) {
+      // chain: compute first
+      compute();
+    }
+    pendingVal = parseFloat(display);
+    pendingOp = op;
+    hist = display + ' ' + opSymbol(op);
+    justCalc = true;
+    render();
+  }
+
+  function opSymbol(op) {
+    return { '+': '+', '-': '−', '*': '×', '/': '÷', '%': 'mod', '^': 'yˣ' }[op] || op;
+  }
+
+  function compute() {
+    if (pendingOp === null) return;
+    const a = pendingVal;
+    const b = parseFloat(display);
+    let res;
+    switch (pendingOp) {
+      case '+': res = a + b; break;
+      case '-': res = a - b; break;
+      case '*': res = a * b; break;
+      case '/': res = b === 0 ? NaN : a / b; break;
+      case '%': res = a % b; break;
+      case '^': res = Math.pow(a, b); break;
+    }
+    hist = fmtNum(a) + ' ' + opSymbol(pendingOp) + ' ' + fmtNum(b) + ' =';
+    display = fmtNum(res);
+    pendingOp = null;
+    pendingVal = null;
+    justCalc = true;
+    render();
+  }
+
+  function calculate() { compute(); }
+
+  function sci(fn) {
+    if (display === 'ERROR') return;
+    const x = parseFloat(display);
+    let res, label;
+    switch (fn) {
+      case 'sin':   res = Math.sin(toRad(x));        label = 'sin'; break;
+      case 'cos':   res = Math.cos(toRad(x));        label = 'cos'; break;
+      case 'tan':   res = Math.tan(toRad(x));        label = 'tan'; break;
+      case 'asin':  res = fromRad(Math.asin(x));     label = 'sin⁻¹'; break;
+      case 'acos':  res = fromRad(Math.acos(x));     label = 'cos⁻¹'; break;
+      case 'atan':  res = fromRad(Math.atan(x));     label = 'tan⁻¹'; break;
+      case 'log':   res = Math.log10(x);             label = 'log'; break;
+      case 'ln':    res = Math.log(x);               label = 'ln'; break;
+      case 'sqrt':  res = Math.sqrt(x);              label = '√'; break;
+      case 'sqr':   res = x * x;                     label = 'x²'; break;
+      case 'cube':  res = x * x * x;                 label = 'x³'; break;
+      case 'cbrt':  res = Math.cbrt(x);              label = '∛'; break;
+      case 'inv':   res = x === 0 ? NaN : 1 / x;    label = '1/x'; break;
+      case 'exp10': res = Math.pow(10, x);           label = '10ˣ'; break;
+      case 'exp':   res = Math.exp(x);               label = 'eˣ'; break;
+    }
+    hist = label + '(' + fmtNum(x) + ') =';
+    display = fmtNum(res);
+    justCalc = true;
+    render();
+  }
+
+  function inputConst(c) {
+    if (justCalc) { display = '0'; hist = ''; justCalc = false; }
+    if (c === 'pi') display = String(Math.PI);
+    if (c === 'e')  display = String(Math.E);
+    justCalc = true;
+    render();
+  }
+
+  function inputPow() { inputOp('^'); }
+
+  function toggleSign() {
+    if (display === '0' || display === 'ERROR') return;
+    display = display.startsWith('-') ? display.slice(1) : '-' + display;
+    render();
+  }
+
+  function ac() {
+    display = '0'; hist = ''; pendingOp = null; pendingVal = null; justCalc = false;
+    render();
+  }
+
+  function ce() {
+    if (display !== '0') display = '0';
+    render();
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9') inputNum(e.key);
+    else if (e.key === '.')  inputDot();
+    else if (e.key === '+')  inputOp('+');
+    else if (e.key === '-')  inputOp('-');
+    else if (e.key === '*')  inputOp('*');
+    else if (e.key === '/')  { e.preventDefault(); inputOp('/'); }
+    else if (e.key === 'Enter' || e.key === '=') calculate();
+    else if (e.key === 'Backspace') ce();
+    else if (e.key === 'Escape') ac();
+  });
+
+  render();
+</script>
+</body>
+</html>
